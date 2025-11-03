@@ -29,6 +29,7 @@ RUN apk add --no-cache \
         libjpeg-turbo-dev \
         libwebp-dev \
         libpng-dev \
+        postgresql-client \
         postgresql-dev \
         zlib-dev \
         oniguruma-dev \
