@@ -22,15 +22,23 @@ RUN composer require "zircote/swagger-php:^4.0" --no-scripts --no-interaction --
 # ==========================
 FROM php:8.3-fpm-alpine
 
-# Installer les extensions PHP nécessaires pour Laravel
+# Installer les outils de compilation et extensions nécessaires
 RUN apk add --no-cache \
+        bash \
+        autoconf \
+        gcc \
+        g++ \
+        make \
+        libtool \
         postgresql-dev \
-        libpng-dev \
+        freetype-dev \
         libjpeg-turbo-dev \
         libwebp-dev \
-        freetype-dev \
+        libpng-dev \
         oniguruma-dev \
-        bash \
+        zlib-dev \
+        libxml2-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
     && docker-php-ext-install \
         pdo \
         pdo_pgsql \
@@ -40,7 +48,8 @@ RUN apk add --no-cache \
         exif \
         pcntl \
         tokenizer \
-        xml
+        xml \
+    && apk del gcc g++ make autoconf libtool
 
 # Créer un utilisateur non-root
 RUN addgroup -g 1000 laravel \
@@ -52,7 +61,7 @@ WORKDIR /var/www/html
 # Copier le code depuis l'étape build
 COPY --from=composer-build /app /var/www/html
 
-# Copier les clés OAuth depuis /etc/secrets fourni par Render
+# Copier les clés OAuth depuis Render Secret Files
 RUN cp /etc/secrets/oauth-private.key storage/oauth-private.key \
     && cp /etc/secrets/oauth-public.key storage/oauth-public.key
 
@@ -68,5 +77,5 @@ USER laravel
 # Exposer le port 8000 (pour dev)
 EXPOSE 8000
 
-# Commande par défaut (développement)
+# Commande par défaut pour le développement
 CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
