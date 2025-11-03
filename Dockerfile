@@ -29,10 +29,9 @@ WORKDIR /var/www/html
 # Copier les fichiers du build
 COPY --from=composer-build /app /var/www/html
 
-# Copier les clés OAuth générées localement
-COPY storage/oauth-private.key storage/
-COPY storage/oauth-public.key storage/
-
+# Copier les clés OAuth depuis un dossier sécurisé (doit être monté via docker-compose ou volume)
+COPY ./secrets/oauth-private.key storage/oauth-private.key
+COPY ./secrets/oauth-public.key storage/oauth-public.key
 # Créer les répertoires nécessaires
 RUN mkdir -p storage/framework/{cache,data,sessions,testing,views} \
     && mkdir -p storage/logs bootstrap/cache \
