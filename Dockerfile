@@ -58,15 +58,15 @@ WORKDIR /var/www/html
 # Copier le code depuis l'étape build
 COPY --from=composer-build /app /var/www/html
 
-# Copier les clés OAuth depuis Render Secret Files
-RUN cp /etc/secrets/oauth-private.key storage/oauth-private.key \
-    && cp /etc/secrets/oauth-public.key storage/oauth-public.key
-
 # Créer les répertoires nécessaires et définir les permissions
 RUN mkdir -p storage/framework/{cache,data,sessions,testing,views} \
     && mkdir -p storage/logs bootstrap/cache \
     && chown -R laravel:laravel /var/www/html \
     && chmod -R 775 storage bootstrap/cache
+
+# Copier le script d'entrypoint
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
 # Utilisateur non-root par défaut
 USER laravel
@@ -74,5 +74,8 @@ USER laravel
 # Exposer le port 8000 (pour dev)
 EXPOSE 8000
 
-# Commande par défaut pour le développement
+# Entrypoint
+ENTRYPOINT ["/entrypoint.sh"]
+
+# Commande par défaut
 CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
