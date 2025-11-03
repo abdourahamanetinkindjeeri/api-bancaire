@@ -11,10 +11,10 @@ COPY composer.json composer.lock /app/
 # Installer les dépendances sans exécuter les scripts artisan
 RUN composer install --no-scripts --optimize-autoloader --no-interaction --prefer-dist
 
-# Copier le reste du code
+# Copier le reste du code source
 COPY . .
 
-# Installer Swagger si nécessaire
+# Installer Swagger
 RUN composer require "zircote/swagger-php:^4.0" --no-scripts --no-interaction --prefer-dist
 
 # ==========================
@@ -22,33 +22,30 @@ RUN composer require "zircote/swagger-php:^4.0" --no-scripts --no-interaction --
 # ==========================
 FROM php:8.3-fpm-alpine
 
-# Installer les outils de compilation et extensions nécessaires
+# Installer dépendances système et extensions compilables
 RUN apk add --no-cache \
         bash \
+        freetype-dev \
+        libjpeg-turbo-dev \
+        libwebp-dev \
+        libpng-dev \
+        postgresql-dev \
+        zlib-dev \
+        oniguruma-dev \
+        libxml2-dev \
+        gmp-dev \
         autoconf \
         gcc \
         g++ \
         make \
         libtool \
-        postgresql-dev \
-        freetype-dev \
-        libjpeg-turbo-dev \
-        libwebp-dev \
-        libpng-dev \
-        oniguruma-dev \
-        zlib-dev \
-        libxml2-dev \
     && docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
     && docker-php-ext-install \
         pdo \
         pdo_pgsql \
         bcmath \
         gd \
-        mbstring \
-        exif \
         pcntl \
-        tokenizer \
-        xml \
     && apk del gcc g++ make autoconf libtool
 
 # Créer un utilisateur non-root
@@ -65,7 +62,7 @@ COPY --from=composer-build /app /var/www/html
 RUN cp /etc/secrets/oauth-private.key storage/oauth-private.key \
     && cp /etc/secrets/oauth-public.key storage/oauth-public.key
 
-# Créer les répertoires nécessaires et donner les bonnes permissions
+# Créer les répertoires nécessaires et définir les permissions
 RUN mkdir -p storage/framework/{cache,data,sessions,testing,views} \
     && mkdir -p storage/logs bootstrap/cache \
     && chown -R laravel:laravel /var/www/html \
